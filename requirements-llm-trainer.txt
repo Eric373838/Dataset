@@ -2,6 +2,5 @@ gradio>=4.44.0
 transformers>=4.46.0
 datasets>=2.21.0
 accelerate>=0.34.0
-tokenizers>=0.20.0
 sentencepiece>=0.2.0
 safetensors>=0.4.5
