@@ -1,71 +1,93 @@
-# Own LLM Pretraining Studio (Windows + CUDA/cuDNN)
+# GPU LLM Trainer (Windows + CUDA/cuDNN)
 
-This setup is for **training your own model from scratch** (pretraining), not fine-tuning a pretrained checkpoint.
+This repository now includes a complete **local LLM training app** that you can launch from a `.bat` file.
 
 ## What you get
 
-- `app.py`: Gradio web UI to configure full pretraining runs.
-- `trainer_core.py`: Scratch-pretraining pipeline (new tokenizer + new GPT model).
-- `run_app.bat`: One-click Windows launcher.
-- `requirements-llm-trainer.txt`: Dependency list.
-- `outputs/`: Saved tokenizer, checkpoints, and final model.
+- `app.py`: Gradio web UI to configure and run training.
+- `trainer_core.py`: Training pipeline using Hugging Face Transformers.
+- `run_app.bat`: One-click launcher for Windows.
+- `requirements-llm-trainer.txt`: Python dependencies.
+- `outputs/`: Folder where trained models are saved.
 
-## Core behavior
+## Features
 
-- Upload one `.txt` dataset in the UI.
-- Train a **new ByteLevel BPE tokenizer** from your dataset.
-- Build a **new GPT architecture from scratch** (choose layers/heads/embedding size).
-- Pretrain on your NVIDIA GPU with CUDA (or block run when CUDA is missing).
-- Save artifacts to `outputs/<run_name>/`.
-
----
-
-## 1) Windows requirements
-
-1. Python 3.10+
-2. NVIDIA GPU + current driver
-3. CUDA-capable environment
-4. Enough disk + VRAM for your architecture
+- Upload a `.txt` dataset directly in the UI.
+- Choose base model, sequence length, epochs, batch size, learning rate, and precision.
+- Uses your **NVIDIA GPU** automatically when CUDA is available.
+- Streams logs in the UI while training runs.
+- Saves model and tokenizer to `outputs/<your_run_name>/`.
 
 ---
 
-## 2) Start from BAT file
+## 1) System requirements (Windows)
+
+1. **Python 3.10+**
+2. **NVIDIA GPU** with recent drivers
+3. **CUDA + cuDNN** correctly installed (or a PyTorch build that bundles CUDA runtime)
+4. Enough VRAM for the selected model
+
+---
+
+## 2) Install
+
+From repository root:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install --upgrade pip
+pip install -r requirements-llm-trainer.txt
+```
+
+> If needed, install a CUDA-enabled PyTorch build from the official PyTorch selector first.
+
+---
+
+## 3) Run the app
 
 Double-click:
 
 - `run_app.bat`
 
-The BAT script will:
+Or manually:
 
-1. Create `.venv` if needed.
-2. Install **CUDA-enabled PyTorch (cu121)**.
-3. Install app dependencies.
-4. Launch the web app.
+```bash
+python app.py
+```
 
----
-
-## 3) Use the app
-
-1. Upload your training data (`.txt`).
-2. Set a run name.
-3. Choose architecture: vocab size, layers, heads, embedding dim.
-4. Set training hyperparameters.
-5. Keep **Require CUDA GPU** checked for GPU-only training.
-6. Click **Start Pretraining**.
-
-Outputs are written to:
-
-- `outputs/<run_name>/tokenizer`
-- `outputs/<run_name>/model`
-- `outputs/<run_name>/checkpoint-*`
+Open the shown local URL (usually `http://127.0.0.1:7860`).
 
 ---
 
-## 4) Important note on "full training"
+## 4) Train a model
 
-This pipeline creates both:
+1. Upload your `.txt` dataset in the app.
+2. Set base model (example: `gpt2`, `distilgpt2`, `EleutherAI/pythia-70m`).
+3. Set run/output name.
+4. Tune hyperparameters.
+5. Click **Start Training**.
 
-- tokenizer from your own data
-- model weights from random initialization
+Saved artifacts:
 
-So it is true **training from scratch / pretraining**, not loading a pretrained base model.
+- `outputs/<run_name>/`
+  - model weights
+  - tokenizer
+  - trainer state/checkpoints (if enabled)
+
+---
+
+## 5) Tips for better results
+
+- Start with a small model (`distilgpt2`) to validate your pipeline.
+- Keep `max_seq_length` moderate (e.g. 256/512) for lower VRAM.
+- Increase gradient accumulation for limited VRAM.
+- Use `fp16` on supported NVIDIA GPUs for faster training.
+- Clean your text data before training.
+
+---
+
+## 6) Notes
+
+- This setup is for **causal language model fine-tuning on plain text**.
+- For large-scale production LLM training, consider distributed frameworks and dataset streaming.
